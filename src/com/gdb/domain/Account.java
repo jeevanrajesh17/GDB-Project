@@ -1,5 +1,10 @@
-
 package com.gdb.domain;
+
+import com.gdb.exceptions.InvalidAmountException;
+import com.gdb.exceptions.InactiveAccountException;
+import com.gdb.exceptions.InsufficientBalanceException;
+import com.gdb.exceptions.InvalidPinException;
+import com.gdb.exceptions.MinimumBalanceViolationException;
 
 public class Account {
 
@@ -11,20 +16,25 @@ public class Account {
     private String status;
     private String pin;
 
+    private static final double MINIMUM_BALANCE = 0.0;
+
     public Account(String accountNumber, String name, int age,
                    double balance, String accountType, String status,
                    String pin) {
 
         if (age < 18) {
-            throw new IllegalArgumentException("Customer must be at least 18 years old.");
+            throw new IllegalArgumentException(
+                    "Customer must be at least 18 years old.");
         }
 
         if (balance < 0) {
-            throw new IllegalArgumentException("Initial balance cannot be negative.");
+            throw new IllegalArgumentException(
+                    "Initial balance cannot be negative.");
         }
 
         if (!isValidPin(pin)) {
-            throw new IllegalArgumentException("PIN must contain exactly 4 digits.");
+            throw new IllegalArgumentException(
+                    "PIN must contain exactly 4 digits.");
         }
 
         this.accountNumber = accountNumber;
@@ -49,7 +59,7 @@ public class Account {
             return false;
         }
 
-        this.pin = newPin;
+        pin = newPin;
         System.out.println("PIN Changed Successfully.");
         return true;
     }
@@ -63,20 +73,40 @@ public class Account {
         return true;
     }
 
-    public boolean withdraw(double amount, String enteredPin) {
+    public boolean withdraw(double amount, String enteredPin)
+            throws InvalidPinException,
+                   InactiveAccountException,
+                   InvalidAmountException,
+                   InsufficientBalanceException,
+                   MinimumBalanceViolationException {
+
         if (!validatePin(enteredPin)) {
-            return false;
+            throw new InvalidPinException("Invalid PIN entered");
         }
 
         if (!"ACTIVE".equals(status)) {
-            return false;
+            throw new InactiveAccountException(
+                    "Account is not active");
         }
 
-        if (amount <= 0 || amount > balance) {
-            return false;
+        if (amount <= 0) {
+            throw new InvalidAmountException(
+                    "Withdrawal amount must be positive");
         }
 
-        balance -= amount;
+        if (amount > balance) {
+            throw new InsufficientBalanceException(
+                    "Insufficient funds in account");
+        }
+
+        double remainingBalance = balance - amount;
+
+        if (remainingBalance < MINIMUM_BALANCE) {
+            throw new MinimumBalanceViolationException(
+                    "Minimum balance requirement violated");
+        }
+
+        balance = remainingBalance;
         return true;
     }
 
@@ -125,7 +155,8 @@ public class Account {
 
     public void setAge(int age) {
         if (age < 18) {
-            throw new IllegalArgumentException("Customer must be at least 18 years old.");
+            throw new IllegalArgumentException(
+                    "Customer must be at least 18 years old.");
         }
         this.age = age;
     }
@@ -136,7 +167,8 @@ public class Account {
 
     public void setBalance(double balance) {
         if (balance < 0) {
-            throw new IllegalArgumentException("Balance cannot be negative.");
+            throw new IllegalArgumentException(
+                    "Balance cannot be negative.");
         }
         this.balance = balance;
     }
