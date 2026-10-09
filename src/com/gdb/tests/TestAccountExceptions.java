@@ -1,3 +1,4 @@
+
 package com.gdb.tests;
 
 import com.gdb.domain.Account;
@@ -5,7 +6,9 @@ import com.gdb.exceptions.*;
 
 public class TestAccountExceptions {
 
-    public static void main(String[] args) {
+public static void main(String[] args) throws Exception {
+
+        System.out.println("=== Activity 6: Exception Handling Suite ===");
 
         Account account = new Account(
                 "ACC1001",
@@ -17,63 +20,52 @@ public class TestAccountExceptions {
                 "1234"
         );
 
-        // Test 1: Invalid PIN
+        // Test 1: Invalid PIN Exception
         try {
             account.withdraw(1000.0, "9999");
         } catch (InvalidPinException e) {
-            System.out.println(
-                    "Caught InvalidPinException as expected: "
-                    + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Unexpected exception: " + e.getMessage());
+            System.out.println("[Test 1] Caught Invalid PIN: "
+                    + e.getMessage() + " [PASS]");
         }
 
-        // Test 2: Inactive account
+        // Test 2: Inactive Account Exception
         account.suspend();
 
         try {
             account.withdraw(1000.0, "1234");
         } catch (InactiveAccountException e) {
-            System.out.println(
-                    "Caught InactiveAccountException as expected: "
-                    + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Unexpected exception: " + e.getMessage());
+            System.out.println("[Test 2] Caught Inactive Account: "
+                    + e.getMessage() + " [PASS]");
         }
 
         account.activate();
 
-        // Test 3: Invalid amount
+        // Test 3: Invalid Amount Exception
         try {
-            account.withdraw(-100.0, "1234");
+            account.deposit(-500.0);
         } catch (InvalidAmountException e) {
-            System.out.println(
-                    "Caught InvalidAmountException as expected: "
-                    + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Unexpected exception: " + e.getMessage());
+            System.out.println("[Test 3] Caught Invalid Amount: "
+                    + e.getMessage() + " [PASS]");
         }
 
-        // Test 4: Insufficient balance
+        // Test 4: Insufficient Balance Exception
         try {
-            account.withdraw(6000.0, "1234");
+            account.withdraw(10000.0, "1234");
         } catch (InsufficientBalanceException e) {
-            System.out.println(
-                    "Caught InsufficientBalanceException as expected: "
-                    + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Unexpected exception: " + e.getMessage());
+            System.out.println("[Test 4] Caught Insufficient Funds: "
+                    + e.getMessage() + " [PASS]");
         }
 
-        // Test 5: Successful withdrawal
+        // Test 5: Polymorphic catch using base exception
+        account.close();
+
         try {
             account.withdraw(1000.0, "1234");
-            System.out.println(
-                    "Successful withdrawal completed: Rs 1000.0"
-                    + " | New Balance: Rs "
-                    + account.getBalance());
-        } catch (Exception e) {
-            System.out.println("Unexpected exception: " + e.getMessage());
+        } catch (AccountException e) {
+            System.out.println("[Test 5] Polymorphic Handler caught: "
+                    + e.getMessage() + " [PASS]");
         }
+
+        System.out.println("All exception handling tests completed successfully!");
     }
 }

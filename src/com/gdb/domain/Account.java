@@ -64,14 +64,15 @@ public class Account {
         return true;
     }
 
-    public boolean deposit(double amount) {
-        if (amount <= 0) {
-            return false;
-        }
-
-        balance += amount;
-        return true;
+    public boolean deposit(double amount) throws InvalidAmountException {
+    if (amount <= 0) {
+        throw new InvalidAmountException(
+                "Deposit amount must be positive");
     }
+
+    balance += amount;
+    return true;
+}
 
     public boolean withdraw(double amount, String enteredPin)
             throws InvalidPinException,

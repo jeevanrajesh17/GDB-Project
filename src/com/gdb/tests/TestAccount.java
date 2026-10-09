@@ -1,5 +1,5 @@
 package com.gdb.tests;
-
+import com.gdb.exceptions.*;
 import com.gdb.domain.Account;
 
 public class TestAccount {
@@ -9,7 +9,7 @@ public class TestAccount {
                 + (passed ? "[PASS]" : "[FAIL]"));
     }
 
-    public static void main(String[] args) {
+public static void main(String[] args) throws Exception {
         System.out.println("=== Activity 4: Enhanced Account Test Suite ===");
 
         // Test 1: Underage Customer Rejection
