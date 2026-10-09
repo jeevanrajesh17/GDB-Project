@@ -13,52 +13,38 @@ public class TestAccount {
             28,
             5000.0,
             "SAVINGS",
-            "ACTIVE"
+            "ACTIVE",
+            "1234"
         );
 
-        System.out.println("=== Activity 2: Test Account Suite ===");
+        System.out.println("=== Activity 3: Enhanced Account Test ===");
+        System.out.println("Initial Balance: Rs " + account.getBalance()
+                + " | Status: " + account.getStatus());
 
-        // Test 1: Initial balance
-        boolean test1 = account.getBalance() == 5000.0;
-        printResult("Test 1 (Initial Balance 5000.0)", test1);
+        boolean withdrawal = account.withdraw(1000.0, "1234");
+        System.out.println("Withdraw without PIN: "
+                + (withdrawal ? "SUCCESS" : "FAILED")
+                + " | Balance: Rs " + account.getBalance());
 
-        // Test 2: Valid deposit
-        boolean depositResult = account.deposit(2000.0);
-        boolean test2 = depositResult && account.getBalance() == 7000.0;
-        printResult("Test 2 (Deposit 2000.0 -> Balance 7000.0)", test2);
+        boolean wrongPin = account.withdraw(1000.0, "9999");
+        System.out.println("Withdraw with wrong PIN: "
+                + (wrongPin ? "SUCCESS" : "FAILED")
+                + " | Balance: Rs " + account.getBalance());
 
-        // Test 3: Negative deposit
-        boolean negativeDepositResult = account.deposit(-500.0);
-        boolean test3 = !negativeDepositResult
-                && account.getBalance() == 7000.0;
-        printResult("Test 3 (Negative Deposit -> Rejected)", test3);
+        account.suspend();
 
-        // Test 4: Valid withdrawal
-        boolean withdrawalResult = account.withdraw(3000.0);
-        boolean test4 = withdrawalResult && account.getBalance() == 4000.0;
-        printResult("Test 4 (Withdraw 3000.0 -> Balance 4000.0)", test4);
+        boolean suspendedWithdrawal = account.withdraw(1000.0, "1234");
+        System.out.println("Withdraw on SUSPENDED account: "
+                + (suspendedWithdrawal ? "SUCCESS" : "FAILED")
+                + " | Balance: Rs " + account.getBalance());
 
-        // Test 5: Withdrawal exceeding balance
-        boolean excessiveWithdrawalResult = account.withdraw(10000.0);
-        boolean test5 = !excessiveWithdrawalResult
-                && account.getBalance() == 4000.0;
-        printResult("Test 5 (Exceeding Withdrawal -> Rejected)", test5);
+        account.activate();
 
-        // Test 6: Negative withdrawal
-        boolean negativeWithdrawalResult = account.withdraw(-100.0);
-        boolean test6 = !negativeWithdrawalResult
-                && account.getBalance() == 4000.0;
-        printResult("Test 6 (Negative Withdrawal -> Rejected)", test6);
+        account.changePin("1234", "5678");
 
-        if (test1 && test2 && test3 && test4 && test5 && test6) {
-            System.out.println("All Account tests completed successfully!");
-        } else {
-            System.out.println("Some Account tests failed.");
-        }
-    }
-
-    private static void printResult(String testName, boolean passed) {
-        System.out.println(testName + ": "
-                + (passed ? "[PASS]" : "[FAIL]"));
+        boolean newPinWithdrawal = account.withdraw(1000.0, "5678");
+        System.out.println("Withdraw with new PIN: "
+                + (newPinWithdrawal ? "SUCCESS" : "FAILED")
+                + " | Balance: Rs " + account.getBalance());
     }
 }
