@@ -5,6 +5,7 @@ import com.gdb.exceptions.InactiveAccountException;
 import com.gdb.exceptions.InsufficientBalanceException;
 import com.gdb.exceptions.InvalidPinException;
 import com.gdb.exceptions.MinimumBalanceViolationException;
+import com.gdb.exceptions.AccountException;
 
 public class Account {
 
@@ -75,11 +76,12 @@ public class Account {
 }
 
     public boolean withdraw(double amount, String enteredPin)
-            throws InvalidPinException,
-                   InactiveAccountException,
-                   InvalidAmountException,
-                   InsufficientBalanceException,
-                   MinimumBalanceViolationException {
+        throws InvalidPinException,
+               InactiveAccountException,
+               InvalidAmountException,
+               InsufficientBalanceException,
+               MinimumBalanceViolationException,
+               AccountException {
 
         if (!validatePin(enteredPin)) {
             throw new InvalidPinException("Invalid PIN entered");
@@ -185,4 +187,7 @@ public class Account {
     public String getStatus() {
         return status;
     }
+    protected void updateBalanceForWithdrawal(double amount) {
+    this.balance -= amount;
+}
 }

@@ -1,3 +1,4 @@
+
 package com.gdb.exceptions;
 
 public class AccountException extends Exception {

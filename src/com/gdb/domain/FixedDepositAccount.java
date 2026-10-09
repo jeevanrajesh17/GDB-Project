@@ -9,10 +9,24 @@ public class FixedDepositAccount extends Account {
     public FixedDepositAccount(String accountNumber, String name, int age,
                                double balance, String status, String pin,
                                int tenureMonths, double interestRate) {
-        super(accountNumber, name, age, balance, "FIXED_DEPOSIT", status, pin);
+
+        super(accountNumber, name, age, balance,
+              "FIXED_DEPOSIT", status, pin);
+
         this.tenureMonths = tenureMonths;
         this.interestRate = interestRate;
     }
+
+    
+   
+@Override
+public boolean withdraw(double amount, String enteredPin)
+        throws com.gdb.exceptions.AccountException {
+
+    throw new com.gdb.exceptions.AccountException(
+            "Premature withdrawals are not permitted on Fixed Deposit accounts");
+}
+
 
     public double calculateMaturityAmount() {
         double years = tenureMonths / 12.0;

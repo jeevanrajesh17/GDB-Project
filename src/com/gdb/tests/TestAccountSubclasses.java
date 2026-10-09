@@ -44,5 +44,56 @@ public class TestAccountSubclasses {
                 + salary.getEmployerName());
 
         System.out.println("All subclasses instantiated successfully!");
+
+        System.out.println("\n=== Activity 8: Polymorphism Test ===");
+
+        // Test 1: Savings account minimum balance
+        try {
+            savings.withdraw(9500.0, "1234");
+            System.out.println("[Savings] Test FAILED");
+        } catch (com.gdb.exceptions.MinimumBalanceViolationException e) {
+            System.out.println(
+                "[Savings] Withdraw 9500 (breaches min balance 1000): "
+                + "Caught MinimumBalanceViolationException [PASS]");
+        } catch (Exception e) {
+            System.out.println("[Savings] Unexpected exception: " + e.getMessage());
+        }
+
+        // Test 2: Current account withdrawal within overdraft limit
+        try {
+            current.withdraw(40000.0, "1234");
+            System.out.println(
+                "[Current] Withdraw within overdraft: Balance Rs "
+                + current.getBalance() + " [PASS]");
+        } catch (Exception e) {
+            System.out.println("[Current] Unexpected exception: " + e.getMessage());
+        }
+
+        // Test 3: Current account withdrawal beyond overdraft limit
+        try {
+            current.withdraw(10000.0, "1234");
+            System.out.println("[Current] Overdraft test FAILED");
+        } catch (com.gdb.exceptions.InsufficientBalanceException e) {
+            System.out.println(
+                "[Current] Withdraw exceeding overdraft: "
+                + "Caught InsufficientBalanceException [PASS]");
+        } catch (Exception e) {
+            System.out.println("[Current] Unexpected exception: " + e.getMessage());
+        }
+
+        // Test 4: Fixed deposit premature withdrawal
+        try {
+            fixedDeposit.withdraw(1000.0, "1234");
+            System.out.println("[FixedDeposit] Test FAILED");
+        } catch (com.gdb.exceptions.AccountException e) {
+            System.out.println(
+                "[FixedDeposit] Withdraw attempt: "
+                + "Caught AccountException [PASS]");
+        } catch (Exception e) {
+            System.out.println("[FixedDeposit] Unexpected exception: " + e.getMessage());
+        }
+
+        System.out.println("All polymorphic behaviors verified!");
+
     }
 }
