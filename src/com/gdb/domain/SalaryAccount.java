@@ -46,4 +46,7 @@ public class SalaryAccount extends AbstractAccount {
     public void setInactiveMonths(int inactiveMonths) {
         this.inactiveMonths = inactiveMonths;
     }
+    public boolean checkSalaryCreditHistory() {
+    return inactiveMonths == 0;
+}
 }
