@@ -74,7 +74,7 @@ public SavingsAccount(String accountNumber, String name, int age,
     public void setInterestRate(double interestRate) {
         this.interestRate = interestRate;
     }
-
+@Override 
     public int getTenureYears() {
         return tenureYears;
     }

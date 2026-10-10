@@ -5,6 +5,7 @@ import com.gdb.exceptions.AccountException;
 import com.gdb.exceptions.InvalidAmountException;
 import com.gdb.exceptions.InvalidPinException;
 import com.gdb.exceptions.InactiveAccountException;
+import java.time.LocalDateTime;
 
 public abstract class AbstractAccount implements IAccount {
 
@@ -15,6 +16,8 @@ public abstract class AbstractAccount implements IAccount {
     protected String accountType;
     protected String status;
     protected String pin;
+    protected double dailyTransferTotal = 0.0;
+protected LocalDateTime lastTransferDate = LocalDateTime.now();
 
     public AbstractAccount(String accountNumber, String name, int age,
                            double balance, String accountType,
@@ -161,4 +164,51 @@ public abstract class AbstractAccount implements IAccount {
     public void setStatus(String status) {
         this.status = status;
     }
+
+public double getDailyTransferTotal() {
+    resetDailyTransferIfNeeded();
+    return dailyTransferTotal;
+}
+
+public LocalDateTime getLastTransferDate() {
+    return lastTransferDate;
+}
+
+public double getDailyTransferLimit() {
+    return AccountRulesEngine.getInstance()
+            .getDailyTransferLimit(getAccountType(), getTenureYears());
+}
+
+public double getRemainingDailyTransferLimit() {
+    resetDailyTransferIfNeeded();
+    return Math.max(0.0,
+            getDailyTransferLimit() - dailyTransferTotal);
+}
+
+public boolean canTransfer(double amount) {
+    resetDailyTransferIfNeeded();
+    return amount > 0
+            && dailyTransferTotal + amount <= getDailyTransferLimit();
+}
+
+public void updateDailyTransferTotal(double amount) {
+    resetDailyTransferIfNeeded();
+    dailyTransferTotal += amount;
+    lastTransferDate = LocalDateTime.now();
+}
+
+public void resetDailyTransferIfNeeded() {
+    if (lastTransferDate == null
+            || !lastTransferDate.toLocalDate()
+                    .equals(LocalDateTime.now().toLocalDate())) {
+        dailyTransferTotal = 0.0;
+        lastTransferDate = LocalDateTime.now();
+    }
+}
+
+// Default tenure for account types without a tenure field.
+public int getTenureYears() {
+    return 0;
+}
+
 }

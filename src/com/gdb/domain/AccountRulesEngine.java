@@ -6,6 +6,9 @@ public final class AccountRulesEngine {
     private static final String RULES_PATH =
             "src/main/resources/config/rules/";
 
+    private static final AccountRulesEngine INSTANCE =
+            new AccountRulesEngine();
+
     private static final AccountRulesPropertiesLoader SAVINGS_RULES =
             new AccountRulesPropertiesLoader(
                     RULES_PATH + "savings.properties");
@@ -23,7 +26,11 @@ public final class AccountRulesEngine {
                     RULES_PATH + "salary.properties");
 
     private AccountRulesEngine() {
-        // Prevent instantiation.
+        // Prevent external instantiation.
+    }
+
+    public static AccountRulesEngine getInstance() {
+        return INSTANCE;
     }
 
     public static double getSavingsMinBalance(int tenureYears) {
@@ -86,5 +93,76 @@ public final class AccountRulesEngine {
     public static double getSalaryOverdraftLimit() {
         return SALARY_RULES.getDouble(
                 "salary.overdraft.limit", 0.0);
+    }
+
+    public double getDailyTransferLimit(
+            String accountType, int tenureYears) {
+
+        Object limit = getAdditionalFeature(
+                accountType, tenureYears, "dailyTransferLimit");
+
+        return limit == null ? 0.0 : (Double) limit;
+    }
+
+    private Object getAdditionalFeature(
+            String accountType, int tenureYears, String featureKey) {
+
+        if (accountType == null) {
+            return null;
+        }
+
+        AccountRulesPropertiesLoader loader;
+        String type = accountType.replace("_", "")
+                                 .replace(" ", "")
+                                 .toUpperCase();
+
+        switch (type) {
+            case "SAVINGS":
+                loader = SAVINGS_RULES;
+                break;
+            case "CURRENT":
+                loader = CURRENT_RULES;
+                break;
+            case "FIXEDDEPOSIT":
+            case "FD":
+                loader = FD_RULES;
+                break;
+            case "SALARY":
+                loader = SALARY_RULES;
+                break;
+            default:
+                return null;
+        }
+
+        String bucket;
+        if (tenureYears >= 5) {
+            bucket = "privilege";
+        } else if (tenureYears >= 3) {
+            bucket = "premium";
+        } else if (tenureYears >= 1) {
+            bucket = "standard";
+        } else {
+            bucket = "new";
+        }
+
+        String key = featureKey + "." + bucket;
+
+        // Property files use daily.transfer.limit.<bucket>.
+        if ("dailyTransferLimit".equals(featureKey)) {
+            key = "daily.transfer.limit." + bucket;
+        }
+
+        String value = loader.getProperty(key, null);
+
+        if (value == null) {
+            return null;
+        }
+
+        try {
+            return Double.valueOf(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Invalid rule value for property: " + key, e);
+        }
     }
 }

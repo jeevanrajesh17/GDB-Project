@@ -1,5 +1,6 @@
 package com.gdb.domain;
 
+import java.time.LocalDateTime;
 import com.gdb.exceptions.InvalidAmountException;
 import com.gdb.exceptions.InactiveAccountException;
 import com.gdb.exceptions.InsufficientBalanceException;
@@ -16,6 +17,8 @@ public class Account {
     private String accountType;
     private String status;
     private String pin;
+    private double dailyTransferTotal = 0.0;
+    private LocalDateTime lastTransferDate = LocalDateTime.now();
 
     private static final double MINIMUM_BALANCE = 0.0;
 
@@ -190,4 +193,63 @@ public class Account {
     protected void updateBalanceForWithdrawal(double amount) {
     this.balance -= amount;
 }
+public double getDailyTransferTotal() {
+    resetDailyTransferIfNeeded();
+    return dailyTransferTotal;
+}
+
+public LocalDateTime getLastTransferDate() {
+    return lastTransferDate;
+}
+
+public double getDailyTransferLimit() {
+    return AccountRulesEngine.getInstance()
+            .getDailyTransferLimit(getAccountType(), getTenureYears());
+}
+
+public double getRemainingDailyTransferLimit() {
+    resetDailyTransferIfNeeded();
+
+    return Math.max(
+            0.0,
+            getDailyTransferLimit() - dailyTransferTotal);
+}
+
+public boolean canTransfer(double amount) {
+    resetDailyTransferIfNeeded();
+
+    return amount > 0
+            && dailyTransferTotal + amount <= getDailyTransferLimit();
+}
+
+public void updateDailyTransferTotal(double amount) {
+    resetDailyTransferIfNeeded();
+
+    dailyTransferTotal += amount;
+    lastTransferDate = LocalDateTime.now();
+}
+
+public void resetDailyTransferIfNeeded() {
+    if (lastTransferDate == null
+            || !lastTransferDate.toLocalDate()
+                    .equals(LocalDateTime.now().toLocalDate())) {
+
+        dailyTransferTotal = 0.0;
+        lastTransferDate = LocalDateTime.now();
+    }
+}
+private int tenureYears = 0;
+
+public int getTenureYears() {
+    return tenureYears;
+}
+
+public void setTenureYears(int tenureYears) {
+    if (tenureYears < 0) {
+        throw new IllegalArgumentException(
+                "Tenure cannot be negative");
+    }
+    this.tenureYears = tenureYears;
+}
+
 }
