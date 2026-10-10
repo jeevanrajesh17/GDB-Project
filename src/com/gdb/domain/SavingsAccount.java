@@ -9,17 +9,34 @@ public class SavingsAccount extends AbstractAccount {
 
     private double minBalance;
     private double interestRate;
+    private int tenureYears;
 
     public SavingsAccount(String accountNumber, String name, int age,
                           double balance, String status, String pin,
-                          double minBalance, double interestRate) {
+                          int tenureYears) {
 
         super(accountNumber, name, age, balance,
               "SAVINGS", status, pin);
 
-        this.minBalance = minBalance;
-        this.interestRate = interestRate;
+        this.tenureYears = tenureYears;
+        this.minBalance =
+                AccountRulesEngine.getSavingsMinBalance(tenureYears);
+        this.interestRate =
+                AccountRulesEngine.getSavingsInterestRate(tenureYears);
     }
+
+public SavingsAccount(String accountNumber, String name, int age,
+                      double balance, String status, String pin,
+                      double minBalance, double interestRate) {
+
+    super(accountNumber, name, age, balance,
+          "SAVINGS", status, pin);
+
+    this.tenureYears = 0;
+    this.minBalance = minBalance;
+    this.interestRate = interestRate;
+}
+
 
     @Override
     protected void processDebit(double amount) throws AccountException {
@@ -56,5 +73,9 @@ public class SavingsAccount extends AbstractAccount {
 
     public void setInterestRate(double interestRate) {
         this.interestRate = interestRate;
+    }
+
+    public int getTenureYears() {
+        return tenureYears;
     }
 }

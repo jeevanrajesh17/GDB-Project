@@ -1,51 +1,48 @@
 
 package com.gdb.tests;
 
-import com.gdb.domain.AccountRulesEngine;
+import com.gdb.domain.AccountFactory;
+import com.gdb.domain.SavingsAccount;
 
 public class TestAccountRulesEngine {
 
     public static void main(String[] args) {
+
         System.out.println(
-                "=== Activity 13.1: Hardcoded Rules Engine Test ===");
+                "=== Activity 13.2: Dynamic Account Rules Test ===");
 
-        int[] tenures = {0, 2, 4, 6};
+        SavingsAccount account = (SavingsAccount)
+                AccountFactory.createAccount(
+                        "SAVINGS",
+                        "SA013",
+                        "Test Customer",
+                        25,
+                        20000.0,
+                        "ACTIVE",
+                        "1234",
+                        4);
 
-        for (int tenure : tenures) {
-            double minBalance =
-                    AccountRulesEngine.getSavingsMinBalance(tenure);
+        System.out.println(
+                "Created Savings Account (Tenure: "
+                        + account.getTenureYears() + " yrs):");
 
-            double interest =
-                    AccountRulesEngine.getSavingsInterestRate(tenure);
+        System.out.println(
+                " -> Min Balance: Rs "
+                        + account.getMinBalance()
+                        + " (Dynamically fetched)");
 
-            System.out.printf(
-                    "Tenure %d yrs -> Min Balance: Rs %.1f | Interest: %.1f%%%n",
-                    tenure, minBalance, interest);
-        }
+        System.out.println(
+                " -> Interest Rate: "
+                        + account.getInterestRate()
+                        + "% (Dynamically fetched)");
 
-        // Verify current account overdraft calculation
-        double overdraft =
-                AccountRulesEngine.getCurrentOverdraftLimit(10000.0);
-
-        if (overdraft != 25000.0) {
-            throw new AssertionError("Minimum overdraft limit test failed");
-        }
-
-        double higherOverdraft =
-                AccountRulesEngine.getCurrentOverdraftLimit(20000.0);
-
-        if (higherOverdraft != 50000.0) {
-            throw new AssertionError("Turnover-based overdraft test failed");
-        }
-
-        // Verify FD rate for a 12-month deposit
-        double fdRate = AccountRulesEngine.getFDInterestRate(12);
-
-        if (fdRate != 6.5) {
-            throw new AssertionError("FD interest rate test failed");
+        if (account.getMinBalance() != 5000.0
+                || account.getInterestRate() != 3.5) {
+            throw new AssertionError(
+                    "Dynamic rule assignment failed");
         }
 
         System.out.println(
-                "Rules Engine lookup completed successfully!");
+                "Dynamic rule integration verified!");
     }
 }

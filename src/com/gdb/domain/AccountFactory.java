@@ -3,6 +3,7 @@ package com.gdb.domain;
 
 public class AccountFactory {
 
+    // Original method retained for compatibility with earlier activities.
     public static IAccount createAccount(
             String accountType,
             String accountNumber,
@@ -11,6 +12,22 @@ public class AccountFactory {
             double balance,
             String status,
             String pin) {
+
+        return createAccount(
+                accountType, accountNumber, name, age,
+                balance, status, pin, 0);
+    }
+
+    // New method accepts customer relationship tenure.
+    public static IAccount createAccount(
+            String accountType,
+            String accountNumber,
+            String name,
+            int age,
+            double balance,
+            String status,
+            String pin,
+            int tenureYears) {
 
         if (accountType == null) {
             throw new IllegalArgumentException(
@@ -22,7 +39,7 @@ public class AccountFactory {
             case "SAVINGS":
                 return new SavingsAccount(
                         accountNumber, name, age, balance,
-                        status, pin, 1000.0, 5.0);
+                        status, pin, tenureYears);
 
             case "CURRENT":
                 return new CurrentAccount(
