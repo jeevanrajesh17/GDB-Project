@@ -6,7 +6,7 @@ import com.gdb.exceptions.InvalidAmountException;
 import com.gdb.exceptions.InvalidPinException;
 import com.gdb.exceptions.InactiveAccountException;
 
-public abstract class AbstractAccount {
+public abstract class AbstractAccount implements IAccount {
 
     protected String accountNumber;
     protected String name;
