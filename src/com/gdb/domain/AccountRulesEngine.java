@@ -1,64 +1,90 @@
 
 package com.gdb.domain;
 
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-
 public final class AccountRulesEngine {
 
-    private static final NavigableMap<Integer, Double> SAVINGS_MIN_BALANCE =
-            new TreeMap<>();
+    private static final String RULES_PATH =
+            "src/main/resources/config/rules/";
 
-    private static final NavigableMap<Integer, Double> SAVINGS_INTEREST_RATE =
-            new TreeMap<>();
+    private static final AccountRulesPropertiesLoader SAVINGS_RULES =
+            new AccountRulesPropertiesLoader(
+                    RULES_PATH + "savings.properties");
 
-    private static final NavigableMap<Integer, Double> FD_INTEREST_RATE =
-            new TreeMap<>();
+    private static final AccountRulesPropertiesLoader CURRENT_RULES =
+            new AccountRulesPropertiesLoader(
+                    RULES_PATH + "current.properties");
 
-    static {
-        // Savings minimum balance by tenure
-        SAVINGS_MIN_BALANCE.put(0, 10000.0);
-        SAVINGS_MIN_BALANCE.put(1, 7500.0);
-        SAVINGS_MIN_BALANCE.put(3, 5000.0);
-        SAVINGS_MIN_BALANCE.put(5, 2500.0);
+    private static final AccountRulesPropertiesLoader FD_RULES =
+            new AccountRulesPropertiesLoader(
+                    RULES_PATH + "fixeddeposit.properties");
 
-        // Savings interest rate by tenure
-        SAVINGS_INTEREST_RATE.put(0, 2.70);
-        SAVINGS_INTEREST_RATE.put(1, 3.00);
-        SAVINGS_INTEREST_RATE.put(3, 3.50);
-        SAVINGS_INTEREST_RATE.put(5, 4.00);
-
-        // FD interest rate: 12 months or more
-        FD_INTEREST_RATE.put(12, 6.5);
-    }
+    private static final AccountRulesPropertiesLoader SALARY_RULES =
+            new AccountRulesPropertiesLoader(
+                    RULES_PATH + "salary.properties");
 
     private AccountRulesEngine() {
-        // Utility class: prevent object creation.
+        // Prevent instantiation.
     }
 
     public static double getSavingsMinBalance(int tenureYears) {
-        Map.Entry<Integer, Double> rule =
-                SAVINGS_MIN_BALANCE.floorEntry(Math.max(0, tenureYears));
+        if (tenureYears >= 5) {
+            return SAVINGS_RULES.getDouble(
+                    "savings.minBalance.privilege", 2500.0);
+        } else if (tenureYears >= 3) {
+            return SAVINGS_RULES.getDouble(
+                    "savings.minBalance.premium", 5000.0);
+        } else if (tenureYears >= 1) {
+            return SAVINGS_RULES.getDouble(
+                    "savings.minBalance.standard", 7500.0);
+        }
 
-        return rule.getValue();
+        return SAVINGS_RULES.getDouble(
+                "savings.minBalance.new", 10000.0);
     }
 
     public static double getSavingsInterestRate(int tenureYears) {
-        Map.Entry<Integer, Double> rule =
-                SAVINGS_INTEREST_RATE.floorEntry(Math.max(0, tenureYears));
+        if (tenureYears >= 5) {
+            return SAVINGS_RULES.getDouble(
+                    "savings.interestRate.privilege", 4.00);
+        } else if (tenureYears >= 3) {
+            return SAVINGS_RULES.getDouble(
+                    "savings.interestRate.premium", 3.50);
+        } else if (tenureYears >= 1) {
+            return SAVINGS_RULES.getDouble(
+                    "savings.interestRate.standard", 3.00);
+        }
 
-        return rule.getValue();
+        return SAVINGS_RULES.getDouble(
+                "savings.interestRate.new", 2.70);
     }
 
     public static double getCurrentOverdraftLimit(double monthlyTurnover) {
-        return Math.max(25000.0, monthlyTurnover * 2.5);
+        double minimum = CURRENT_RULES.getDouble(
+                "current.overdraft.minimum", 25000.0);
+
+        double multiplier = CURRENT_RULES.getDouble(
+                "current.overdraft.turnoverMultiplier", 2.5);
+
+        return Math.max(minimum, monthlyTurnover * multiplier);
     }
 
     public static double getFDInterestRate(int months) {
-        Map.Entry<Integer, Double> rule =
-                FD_INTEREST_RATE.floorEntry(Math.max(0, months));
+        double defaultRate = FD_RULES.getDouble(
+                "fixeddeposit.interestRate.default", 5.0);
 
-        return rule == null ? 0.0 : rule.getValue();
+        double rate12Months = FD_RULES.getDouble(
+                "fixeddeposit.interestRate.12months", 6.5);
+
+        return months >= 12 ? rate12Months : defaultRate;
+    }
+
+    public static int getSalaryInactiveMonthsLimit() {
+        return (int) SALARY_RULES.getDouble(
+                "salary.inactiveMonths.limit", 3.0);
+    }
+
+    public static double getSalaryOverdraftLimit() {
+        return SALARY_RULES.getDouble(
+                "salary.overdraft.limit", 0.0);
     }
 }
