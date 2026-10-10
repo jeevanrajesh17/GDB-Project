@@ -2,38 +2,38 @@
 package com.gdb.service;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.gdb.command.DepositCommand;
 import com.gdb.command.TransactionCommand;
 import com.gdb.command.TransferCommand;
 import com.gdb.command.WithdrawCommand;
 import com.gdb.domain.AbstractAccount;
-import com.gdb.domain.AccountFactory;
 import com.gdb.domain.IAccount;
 import com.gdb.domain.Transaction;
 import com.gdb.exceptions.AccountException;
 import com.gdb.logging.TransactionLogger;
+import com.gdb.repository.AccountRepository;
+import com.gdb.repository.RepositoryFactory;
+import com.gdb.repository.TransactionRepository;
 
 public class AccountService {
 
-    private final Map<Integer, IAccount> accounts;
+    private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
     private final TransactionLogger logger;
-    private final TransferService transferService;
-
-    private int nextAccountNumber = 1001;
 
     public AccountService(TransactionLogger logger) {
-        this.accounts = new LinkedHashMap<>();
-        this.logger = logger;
-        this.transferService = new TransferService();
-
         if (logger == null) {
             throw new IllegalArgumentException(
                     "Transaction logger cannot be null");
         }
+
+        this.logger = logger;
+        this.accountRepository =
+                RepositoryFactory.createAccountRepository();
+        this.transactionRepository =
+                RepositoryFactory.createTransactionRepository();
     }
 
     public IAccount openAccount(
@@ -42,18 +42,20 @@ public class AccountService {
             int age,
             double initialBalance) {
 
-        int accountNumber = nextAccountNumber++;
+        int accountNumber =
+                accountRepository.nextAccountNumber();
 
-        IAccount account = AccountFactory.createAccount(
-                type,
-                String.valueOf(accountNumber),
-                name,
-                age,
-                initialBalance,
-                "ACTIVE",
-                "1234");
+        IAccount account =
+                com.gdb.domain.AccountFactory.createAccount(
+                        type,
+                        String.valueOf(accountNumber),
+                        name,
+                        age,
+                        initialBalance,
+                        "ACTIVE",
+                        "1234");
 
-        accounts.put(accountNumber, account);
+        accountRepository.save(account);
         return account;
     }
 
@@ -61,7 +63,8 @@ public class AccountService {
             throws AccountException {
 
         IAccount account = getRequiredAccount(accountNumber);
-        AbstractAccount abstractAccount = requireAbstractAccount(account);
+        AbstractAccount abstractAccount =
+                requireAbstractAccount(account);
 
         if (!abstractAccount.validatePin(pin)) {
             throw new AccountException("Incorrect PIN");
@@ -72,19 +75,26 @@ public class AccountService {
         }
 
         abstractAccount.setStatus("CLOSED");
+        accountRepository.update(account);
     }
 
     public Transaction deposit(int accountNumber, double amount)
             throws Exception {
 
-        AbstractAccount account =
-                requireAbstractAccount(getRequiredAccount(accountNumber));
+        AbstractAccount account = requireAbstractAccount(
+                getRequiredAccount(accountNumber));
 
-        TransactionCommand command = new DepositCommand(account, amount);
+        TransactionCommand command =
+                new DepositCommand(account, amount);
+
         command.execute();
+
+        Transaction transaction = command.getTransaction();
+        transactionRepository.save(transaction);
         logger.log(command);
 
-        return command.getTransaction();
+        accountRepository.update(account);
+        return transaction;
     }
 
     public Transaction withdraw(
@@ -92,27 +102,26 @@ public class AccountService {
             double amount,
             String pin) throws Exception {
 
-        AbstractAccount account =
-                requireAbstractAccount(getRequiredAccount(accountNumber));
-
-        int numericPin;
-        try {
-            numericPin = Integer.parseInt(pin);
-        } catch (NumberFormatException e) {
-            throw new AccountException("Incorrect PIN");
-        }
+        AbstractAccount account = requireAbstractAccount(
+                getRequiredAccount(accountNumber));
 
         if (pin == null || !pin.matches("\\d{4}")) {
             throw new AccountException("Incorrect PIN");
         }
 
+        int numericPin = Integer.parseInt(pin);
+
         TransactionCommand command =
                 new WithdrawCommand(account, amount, numericPin);
 
         command.execute();
+
+        Transaction transaction = command.getTransaction();
+        transactionRepository.save(transaction);
         logger.log(command);
 
-        return command.getTransaction();
+        accountRepository.update(account);
+        return transaction;
     }
 
     public Transaction transfer(
@@ -128,31 +137,48 @@ public class AccountService {
                 new TransferCommand(from, to, amount, pin);
 
         command.execute();
+
+        Transaction transaction = command.getTransaction();
+        transactionRepository.save(transaction);
         logger.log(command);
 
-        return command.getTransaction();
+        accountRepository.update(from);
+        accountRepository.update(to);
+
+        return transaction;
     }
 
     public IAccount getAccount(int accountNumber) {
-        return accounts.get(accountNumber);
+        return accountRepository.findById(accountNumber);
     }
 
     public List<IAccount> getAllAccounts() {
-        return new ArrayList<>(accounts.values());
+        return accountRepository.findAll();
     }
 
     public List<TransactionCommand> getTransactionHistory() {
         return logger.readAll();
     }
 
+    public List<Transaction> getRepositoryTransactionHistory() {
+        return transactionRepository.findAll();
+    }
+
+    public List<Transaction> getTransactionsForAccount(
+            int accountNumber) {
+
+        return transactionRepository.findByAccount(accountNumber);
+    }
+
     public int getNextAccountNumber() {
-        return nextAccountNumber;
+        return accountRepository.nextAccountNumber();
     }
 
     private IAccount getRequiredAccount(int accountNumber)
             throws AccountException {
 
-        IAccount account = accounts.get(accountNumber);
+        IAccount account =
+                accountRepository.findById(accountNumber);
 
         if (account == null) {
             throw new AccountException(
