@@ -1,6 +1,9 @@
 
 package com.gdb.service;
 
+import com.gdb.domain.Transaction;
+import com.gdb.domain.TransactionType;
+import java.time.LocalDateTime;
 import com.gdb.domain.AbstractAccount;
 import com.gdb.domain.IAccount;
 import com.gdb.exceptions.AccountException;
@@ -63,4 +66,26 @@ public class TransferService {
 
         source.updateDailyTransferTotal(amount);
     }
+    public Transaction transferWithTransaction(
+        IAccount from,
+        IAccount to,
+        double amount,
+        String pin) throws AccountException {
+
+    transfer(from, to, amount, pin);
+
+    return new Transaction(
+        Transaction.generateId(),
+        LocalDateTime.now(),
+        Integer.parseInt(to.getAccountNumber()),
+        TransactionType.TRANSFER,
+        amount,
+        from.getBalance(),
+        "SUCCESS",
+        "Transfer of Rs. " + amount
+            + " to Account #" + to.getAccountNumber(),
+        Integer.parseInt(from.getAccountNumber()),
+        Integer.parseInt(to.getAccountNumber())
+    );
+}
 }

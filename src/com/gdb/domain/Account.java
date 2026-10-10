@@ -1,6 +1,7 @@
 package com.gdb.domain;
 
 import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import com.gdb.exceptions.InvalidAmountException;
 import com.gdb.exceptions.InactiveAccountException;
 import com.gdb.exceptions.InsufficientBalanceException;
@@ -250,6 +251,42 @@ public void setTenureYears(int tenureYears) {
                 "Tenure cannot be negative");
     }
     this.tenureYears = tenureYears;
+}
+public Transaction depositWithTransaction(double amount)
+        throws com.gdb.exceptions.InvalidAmountException {
+
+    deposit(amount);
+
+    return new Transaction(
+        Transaction.generateId(),
+        LocalDateTime.now(),
+        Integer.parseInt(getAccountNumber()),
+        TransactionType.DEPOSIT,
+        amount,
+        getBalance(),
+        "SUCCESS",
+        "Deposit of Rs. " + amount,
+        0,
+        Integer.parseInt(getAccountNumber())
+    );
+}
+public Transaction withdrawWithTransaction(double amount, int pin)
+        throws Exception {
+
+    withdraw(amount, String.valueOf(pin));
+
+    return new Transaction(
+        Transaction.generateId(),
+        LocalDateTime.now(),
+        Integer.parseInt(getAccountNumber()),
+        TransactionType.WITHDRAW,
+        amount,
+        getBalance(),
+        "SUCCESS",
+        "Withdrawal of Rs. " + amount,
+        Integer.parseInt(getAccountNumber()),
+        0
+    );
 }
 
 }

@@ -1,6 +1,7 @@
 
 package com.gdb.domain;
 
+import java.time.LocalDateTime;
 import com.gdb.exceptions.AccountException;
 import com.gdb.exceptions.InvalidAmountException;
 import com.gdb.exceptions.InvalidPinException;
@@ -209,6 +210,42 @@ public void resetDailyTransferIfNeeded() {
 // Default tenure for account types without a tenure field.
 public int getTenureYears() {
     return 0;
+}
+public Transaction depositWithTransaction(double amount)
+        throws InvalidAmountException {
+
+    deposit(amount);
+
+    return new Transaction(
+        Transaction.generateId(),
+        LocalDateTime.now(),
+        Integer.parseInt(getAccountNumber()),
+        TransactionType.DEPOSIT,
+        amount,
+        getBalance(),
+        "SUCCESS",
+        "Deposit of Rs. " + amount,
+        0,
+        Integer.parseInt(getAccountNumber())
+    );
+}
+public Transaction withdrawWithTransaction(double amount, int pin)
+        throws AccountException {
+
+    withdraw(amount, String.valueOf(pin));
+
+    return new Transaction(
+        Transaction.generateId(),
+        LocalDateTime.now(),
+        Integer.parseInt(getAccountNumber()),
+        TransactionType.WITHDRAW,
+        amount,
+        getBalance(),
+        "SUCCESS",
+        "Withdrawal of Rs. " + amount,
+        Integer.parseInt(getAccountNumber()),
+        0
+    );
 }
 
 }
