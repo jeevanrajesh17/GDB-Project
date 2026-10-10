@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     age INTEGER NOT NULL,
     balance REAL NOT NULL,
     account_type TEXT NOT NULL,
-    status TEXT NOT NULL
+    status TEXT NOT NULL,
+    pin TEXT NOT NULL DEFAULT '1234'
 );
 
 CREATE TABLE IF NOT EXISTS transactions (

@@ -2,6 +2,7 @@
 package com.gdb.repository;
 
 import java.util.List;
+
 import com.gdb.domain.IAccount;
 
 public interface AccountRepository {
@@ -19,4 +20,6 @@ public interface AccountRepository {
     boolean exists(int accountNumber);
 
     int nextAccountNumber();
+
+    void transfer(int fromAccount, int toAccount, double amount);
 }

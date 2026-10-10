@@ -77,4 +77,53 @@ public class InMemoryAccountRepository implements AccountRepository {
     public int nextAccountNumber() {
         return nextId++;
     }
+
+    @Override
+    public void transfer(int fromAccount, int toAccount, double amount) {
+        if (fromAccount == toAccount) {
+            throw new IllegalArgumentException(
+                    "Source and destination accounts must differ");
+        }
+
+        if (!Double.isFinite(amount) || amount <= 0) {
+            throw new IllegalArgumentException(
+                    "Transfer amount must be positive and finite");
+        }
+
+        IAccount source = accounts.get(fromAccount);
+        IAccount destination = accounts.get(toAccount);
+
+        if (source == null || destination == null) {
+            throw new IllegalArgumentException(
+                    "Source or destination account not found");
+        }
+
+        if (source.getBalance() < amount) {
+            throw new IllegalArgumentException(
+                    "Insufficient balance");
+        }
+
+        
+        if (source instanceof com.gdb.domain.AbstractAccount
+                && destination instanceof com.gdb.domain.AbstractAccount) {
+
+            com.gdb.domain.AbstractAccount sourceAccount =
+                    (com.gdb.domain.AbstractAccount) source;
+
+            com.gdb.domain.AbstractAccount destinationAccount =
+                    (com.gdb.domain.AbstractAccount) destination;
+
+            double sourceBalance = source.getBalance();
+            double destinationBalance = destination.getBalance();
+
+            sourceAccount.setBalance(sourceBalance - amount);
+            destinationAccount.setBalance(destinationBalance + amount);
+
+        } else {
+            throw new IllegalArgumentException(
+                    "Unsupported account implementation");
+        }
+
+    }
+
 }

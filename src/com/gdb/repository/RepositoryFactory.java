@@ -19,6 +19,7 @@ public final class RepositoryFactory {
             "config/persistence.properties";
 
     private static Properties configuration;
+    private static ConnectionProvider jdbcProvider;
 
     private RepositoryFactory() {
     }
@@ -72,7 +73,11 @@ public final class RepositoryFactory {
                 .toLowerCase();
     }
 
-    public static ConnectionProvider createConnectionProvider() {
+    public static synchronized ConnectionProvider createConnectionProvider() {
+        if (jdbcProvider != null) {
+            return jdbcProvider;
+        }
+
         Properties properties = getConfiguration();
         String mode = getPersistenceMode();
 
@@ -92,7 +97,8 @@ public final class RepositoryFactory {
 
             new SchemaInitializer(provider).initialize();
 
-            return provider;
+            jdbcProvider = provider;
+            return jdbcProvider;
 
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(
@@ -112,8 +118,8 @@ public final class RepositoryFactory {
                 return new InMemoryAccountRepository();
 
             case "jdbc":
-                createConnectionProvider();
-                return new InMemoryAccountRepository();
+                return new JdbcAccountRepository(
+                        createConnectionProvider());
 
             case "file":
                 throw new UnsupportedOperationException(

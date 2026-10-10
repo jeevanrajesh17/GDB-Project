@@ -89,6 +89,12 @@ protected LocalDateTime lastTransferDate = LocalDateTime.now();
         return pin != null && pin.equals(inputPin);
     }
 
+
+public String getPin() {
+    return pin;
+}
+
+
     public boolean changePin(String oldPin, String newPin) {
         if (!validatePin(oldPin)
                 || newPin == null
