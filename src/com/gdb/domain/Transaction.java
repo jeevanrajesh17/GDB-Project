@@ -3,7 +3,7 @@ package com.gdb.domain;
 
 import java.time.LocalDateTime;
 
-public class Transaction {
+public class Transaction implements java.io.Serializable {
 
     private static int counter = 0;
 
