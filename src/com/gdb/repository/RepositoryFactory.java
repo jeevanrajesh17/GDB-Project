@@ -6,17 +6,28 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.Properties;
+
+import com.gdb.db.ConnectionProvider;
+import com.gdb.db.JdbcConnectionProvider;
+import com.gdb.db.SchemaInitializer;
 
 public final class RepositoryFactory {
 
     private static final String CONFIG_FILE =
             "config/persistence.properties";
 
+    private static Properties configuration;
+
     private RepositoryFactory() {
     }
 
-    private static String getPersistenceMode() {
+    private static synchronized Properties getConfiguration() {
+        if (configuration != null) {
+            return configuration;
+        }
+
         Properties properties = new Properties();
 
         try (InputStream input = openConfig()) {
@@ -26,14 +37,13 @@ public final class RepositoryFactory {
             }
 
             properties.load(input);
+            configuration = properties;
+            return configuration;
 
         } catch (IOException e) {
             throw new IllegalStateException(
                     "Unable to load persistence configuration", e);
         }
-
-        return properties.getProperty(
-                "persistence.mode", "memory").trim().toLowerCase();
     }
 
     private static InputStream openConfig() throws IOException {
@@ -55,6 +65,45 @@ public final class RepositoryFactory {
         return null;
     }
 
+    private static String getPersistenceMode() {
+        return getConfiguration()
+                .getProperty("persistence.mode", "memory")
+                .trim()
+                .toLowerCase();
+    }
+
+    public static ConnectionProvider createConnectionProvider() {
+        Properties properties = getConfiguration();
+        String mode = getPersistenceMode();
+
+        if (!"jdbc".equals(mode)) {
+            throw new IllegalStateException(
+                    "JDBC connection provider requested for mode: "
+                            + mode);
+        }
+
+        String url = properties.getProperty("persistence.db.url");
+        String driver = properties.getProperty(
+                "persistence.db.driver", "org.sqlite.JDBC");
+
+        try {
+            JdbcConnectionProvider provider =
+                    new JdbcConnectionProvider(url, driver);
+
+            new SchemaInitializer(provider).initialize();
+
+            return provider;
+
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(
+                    "JDBC driver not found: " + driver, e);
+
+        } catch (SQLException | IOException e) {
+            throw new IllegalStateException(
+                    "Unable to initialize database schema", e);
+        }
+    }
+
     public static AccountRepository createAccountRepository() {
         String mode = getPersistenceMode();
 
@@ -63,10 +112,12 @@ public final class RepositoryFactory {
                 return new InMemoryAccountRepository();
 
             case "jdbc":
+                createConnectionProvider();
+                return new InMemoryAccountRepository();
+
             case "file":
                 throw new UnsupportedOperationException(
-                        "Persistence mode '" + mode
-                                + "' is not implemented yet.");
+                        "File persistence is not implemented yet.");
 
             default:
                 throw new IllegalArgumentException(
@@ -84,10 +135,12 @@ public final class RepositoryFactory {
                 return new InMemoryTransactionRepository();
 
             case "jdbc":
+                createConnectionProvider();
+                return new InMemoryTransactionRepository();
+
             case "file":
                 throw new UnsupportedOperationException(
-                        "Persistence mode '" + mode
-                                + "' is not implemented yet.");
+                        "File persistence is not implemented yet.");
 
             default:
                 throw new IllegalArgumentException(
